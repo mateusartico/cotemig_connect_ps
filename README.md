@@ -173,6 +173,15 @@ python run.py
 - Visualizar relatórios
 - Configurações do sistema
 
+## 👨‍💻 Equipe de Desenvolvimento
+
+- **Arthur Vinicius** – 22301852
+- **Daniel Bitencourt** – 22301461
+- **Eduarda de Oliveira Neves** – 22401300
+- **Giovanni Antônio** – 22302832
+- **Mateus Artico** – 22301542
+- **Pablo Alex** – 22302514
+
 ---
 
 **Sistema completo e funcional atendendo 12+ requisitos funcionais!**
