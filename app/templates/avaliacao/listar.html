@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Avaliações da Monitoria</h2>
+    </div>
+    
+    <h3>{{ monitoria.titulo }}</h3>
+    <p><strong>Monitor:</strong> {{ monitoria.monitor.nome }}</p>
+    
+    {% if monitoria.media_avaliacoes > 0 %}
+        <p><strong>Avaliação Média:</strong> 
+            {% for i in range(1, 6) %}
+                {% if i <= monitoria.media_avaliacoes %}⭐{% else %}☆{% endif %}
+            {% endfor %}
+            ({{ "%.1f"|format(monitoria.media_avaliacoes) }}) - {{ avaliacoes|length }} avaliação(ões)
+        </p>
+    {% endif %}
+</div>
+
+{% if avaliacoes %}
+    {% for avaliacao in avaliacoes %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>{{ avaliacao.aluno.nome }}</strong>
+            <div>
+                {% for i in range(1, 6) %}
+                    {% if i <= avaliacao.nota %}⭐{% else %}☆{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if avaliacao.comentario %}
+            <p style="margin-top: 0.5rem;">{{ avaliacao.comentario }}</p>
+        {% endif %}
+        
+        <small style="color: #666;">{{ avaliacao.created_at.strftime('%d/%m/%Y às %H:%M') }}</small>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p>Esta monitoria ainda não possui avaliações.</p>
+    </div>
+{% endif %}
+
+<div class="card">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Voltar</a>
+</div>
+{% endblock %}

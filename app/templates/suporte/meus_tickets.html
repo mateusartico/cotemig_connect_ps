@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Meus Tickets de Suporte</h2>
+        <a href="{{ url_for('suporte.criar_ticket') }}" class="btn btn-primary btn-sm">Novo Ticket</a>
+    </div>
+</div>
+
+{% if tickets %}
+    {% for ticket in tickets %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>{{ ticket.assunto }}</h3>
+            <span class="badge {% if ticket.status == 'aberto' %}badge-warning{% elif ticket.status == 'em_andamento' %}badge-info{% else %}badge-success{% endif %}">
+                {{ ticket.status.replace('_', ' ').title() }}
+            </span>
+        </div>
+        
+        <p><strong>Mensagem:</strong></p>
+        <p>{{ ticket.mensagem }}</p>
+        
+        {% if ticket.resposta %}
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                <p><strong>Resposta da Equipe:</strong></p>
+                <p>{{ ticket.resposta }}</p>
+            </div>
+        {% endif %}
+        
+        <small style="color: #666;">
+            Criado em {{ ticket.created_at.strftime('%d/%m/%Y às %H:%M') }}
+        </small>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p>Você ainda não possui tickets de suporte.</p>
+        <a href="{{ url_for('suporte.criar_ticket') }}" class="btn btn-primary">Abrir Primeiro Ticket</a>
+    </div>
+{% endif %}
+{% endblock %}

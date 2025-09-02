@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Bem-vindo, {{ session.user_nome }}!</h2>
+        <span class="badge badge-success">{{ session.user_tipo.title() }}</span>
+    </div>
+</div>
+
+{% if session.user_tipo == 'monitor' %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Minhas Monitorias</h3>
+            <a href="{{ url_for('monitoria.criar') }}" class="btn btn-primary btn-sm">Nova Monitoria</a>
+        </div>
+        
+        {% if monitorias %}
+            {% for monitoria in monitorias %}
+            <div class="card" style="margin-left: 1rem;">
+                <h4>{{ monitoria.titulo }}</h4>
+                <p><strong>Disciplina:</strong> {{ monitoria.disciplina.nome }}</p>
+                <p><strong>Data:</strong> {{ monitoria.data_hora.strftime('%d/%m/%Y às %H:%M') }}</p>
+                <p><strong>Local:</strong> {{ monitoria.local }}</p>
+                <p><strong>Vagas:</strong> {{ monitoria.vagas_ocupadas }}/{{ monitoria.vagas_total }}</p>
+                <p><strong>Status:</strong> 
+                    <span class="badge {% if monitoria.status == 'agendada' %}badge-info{% elif monitoria.status == 'em_andamento' %}badge-warning{% else %}badge-success{% endif %}">
+                        {{ monitoria.status.replace('_', ' ').title() }}
+                    </span>
+                </p>
+                
+                {% if monitoria.status == 'agendada' %}
+                    <a href="{{ url_for('monitoria.iniciar', monitoria_id=monitoria.id) }}" 
+                       class="btn btn-primary btn-sm">Iniciar Monitoria</a>
+                {% elif monitoria.status == 'em_andamento' %}
+                    <p><strong>Código de Presença:</strong> <code>{{ monitoria.codigo_presenca }}</code></p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Você ainda não criou nenhuma monitoria.</p>
+        {% endif %}
+    </div>
+
+{% elif session.user_tipo == 'aluno' %}
+    <div class="grid grid-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Próximas Monitorias</h3>
+            </div>
+            
+            {% if proximas_monitorias %}
+                {% for monitoria in proximas_monitorias %}
+                <div class="card" style="margin-left: 1rem;">
+                    <h4>{{ monitoria.titulo }}</h4>
+                    <p><strong>Monitor:</strong> {{ monitoria.monitor.nome }}</p>
+                    <p><strong>Disciplina:</strong> {{ monitoria.disciplina.nome }}</p>
+                    <p><strong>Data:</strong> {{ monitoria.data_hora.strftime('%d/%m/%Y às %H:%M') }}</p>
+                    <p><strong>Local:</strong> {{ monitoria.local }}</p>
+                    <p><strong>Vagas Disponíveis:</strong> {{ monitoria.vagas_disponiveis }}</p>
+                    
+                    {% if monitoria.vagas_disponiveis > 0 %}
+                        <a href="{{ url_for('monitoria.reservar', monitoria_id=monitoria.id) }}" 
+                           class="btn btn-primary btn-sm">Reservar Vaga</a>
+                    {% else %}
+                        <span class="badge badge-warning">Esgotado</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>Não há monitorias agendadas no momento.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Minhas Reservas</h3>
+            </div>
+            
+            {% if minhas_reservas %}
+                {% for reserva in minhas_reservas %}
+                <div class="card" style="margin-left: 1rem;">
+                    <h4>{{ reserva.monitoria.titulo }}</h4>
+                    <p><strong>Monitor:</strong> {{ reserva.monitoria.monitor.nome }}</p>
+                    <p><strong>Data:</strong> {{ reserva.monitoria.data_hora.strftime('%d/%m/%Y às %H:%M') }}</p>
+                    <p><strong>Local:</strong> {{ reserva.monitoria.local }}</p>
+                    
+                    <a href="{{ url_for('monitoria.cancelar_reserva', monitoria_id=reserva.monitoria.id) }}" 
+                       class="btn btn-danger btn-sm" 
+                       onclick="return confirm('Deseja cancelar esta reserva?')">Cancelar</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>Você não tem reservas ativas.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Registrar Presença</h3>
+        </div>
+        <p>Clique no botão abaixo para registrar sua presença em uma monitoria em andamento.</p>
+        <a href="{{ url_for('monitoria.registrar_presenca') }}" class="btn btn-primary">Registrar Presença</a>
+    </div>
+{% endif %}
+{% endblock %}

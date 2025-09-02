@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <h1>Verificação</h1>
+            <p>Digite o código de verificação</p>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="codigo" class="form-label">Código de Verificação</label>
+                <input type="text" id="codigo" name="codigo" class="form-control" 
+                       maxlength="6" pattern="[0-9]{6}" required
+                       placeholder="000000">
+                <div class="form-hint">
+                    Digite o código de 6 dígitos que foi exibido após o cadastro
+                </div>
+            </div>
+
+            <button type="submit" class="auth-submit">Verificar</button>
+        </form>
+
+        <div class="auth-link">
+            <p>Não recebeu o código?</p>
+            <a href="{{ url_for('auth.cadastro') }}">Cadastre-se novamente</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

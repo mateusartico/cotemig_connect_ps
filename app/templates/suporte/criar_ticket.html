@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Abrir Ticket de Suporte</h2>
+    </div>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="assunto" class="form-label">Assunto</label>
+            <select id="assunto" name="assunto" class="form-control" required>
+                <option value="">Selecione o assunto...</option>
+                <option value="Problema técnico">Problema técnico</option>
+                <option value="Dúvida sobre monitoria">Dúvida sobre monitoria</option>
+                <option value="Problema com reserva">Problema com reserva</option>
+                <option value="Problema com presença">Problema com presença</option>
+                <option value="Sugestão">Sugestão</option>
+                <option value="Outro">Outro</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="mensagem" class="form-label">Descrição do Problema</label>
+            <textarea id="mensagem" name="mensagem" class="form-control" rows="6" required
+                      placeholder="Descreva detalhadamente seu problema ou dúvida..."></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">Enviar Ticket</button>
+            <a href="{{ url_for('suporte.index') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

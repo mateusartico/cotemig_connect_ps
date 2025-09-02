@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cotemig Connect{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% if session.user_id %}
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Cotemig Connect</div>
+                <nav class="nav-menu" id="navMenu">
+                    <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('busca.index') }}">Buscar</a>
+                    {% if session.user_tipo == 'monitor' %}
+                        <a href="{{ url_for('monitoria.criar') }}">Criar Monitoria</a>
+                    {% elif session.user_tipo == 'aluno' %}
+                        <a href="{{ url_for('monitoria.registrar_presenca') }}">Registrar Presença</a>
+                    {% endif %}
+                    <a href="{{ url_for('suporte.index') }}">Suporte</a>
+                    <a href="{{ url_for('auth.logout') }}">Sair</a>
+                </nav>
+                <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    <main class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('navMenu');
+            menu.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

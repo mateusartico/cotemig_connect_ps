@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Resultados da Busca</h2>
+        {% if termo %}
+            <p>Buscando por: "<strong>{{ termo }}</strong>"</p>
+        {% endif %}
+    </div>
+    
+    <p>{{ monitorias|length }} monitoria(s) encontrada(s)</p>
+    
+    {% if monitorias|length > 1 %}
+        <form action="{{ url_for('busca.comparar') }}" method="GET">
+            <p><strong>Comparar monitorias:</strong></p>
+    {% endif %}
+</div>
+
+{% for monitoria in monitorias %}
+<div class="card">
+    {% if monitorias|length > 1 %}
+        <input type="checkbox" name="ids" value="{{ monitoria.id }}" style="float: right;">
+    {% endif %}
+    
+    <h3>{{ monitoria.titulo }}</h3>
+    <p><strong>Monitor:</strong> {{ monitoria.monitor.nome }}</p>
+    <p><strong>Disciplina:</strong> {{ monitoria.disciplina.nome }}</p>
+    <p><strong>Data:</strong> {{ monitoria.data_hora.strftime('%d/%m/%Y às %H:%M') }}</p>
+    <p><strong>Local:</strong> {{ monitoria.local }}</p>
+    <p><strong>Vagas:</strong> {{ monitoria.vagas_disponiveis }}/{{ monitoria.vagas_total }}</p>
+    
+    {% if monitoria.media_avaliacoes > 0 %}
+        <p><strong>Avaliação:</strong> 
+            {% for i in range(1, 6) %}
+                {% if i <= monitoria.media_avaliacoes %}⭐{% else %}☆{% endif %}
+            {% endfor %}
+            ({{ "%.1f"|format(monitoria.media_avaliacoes) }})
+        </p>
+    {% endif %}
+    
+    {% if monitoria.tags %}
+        <p><strong>Tags:</strong> {{ monitoria.tags }}</p>
+    {% endif %}
+    
+    <div style="margin-top: 1rem;">
+        {% if session.user_tipo == 'aluno' and monitoria.vagas_disponiveis > 0 %}
+            <a href="{{ url_for('monitoria.reservar', monitoria_id=monitoria.id) }}" 
+               class="btn btn-primary btn-sm">Reservar</a>
+        {% endif %}
+        
+        <a href="{{ url_for('avaliacao.listar', monitoria_id=monitoria.id) }}" 
+           class="btn btn-secondary btn-sm">Ver Avaliações</a>
+    </div>
+</div>
+{% endfor %}
+
+{% if monitorias|length > 1 %}
+    <div class="card">
+        <button type="submit" class="btn btn-primary">Comparar Selecionadas</button>
+    </div>
+    </form>
+{% endif %}
+
+{% if not monitorias %}
+<div class="card">
+    <p>Nenhuma monitoria encontrada. Tente outros termos de busca.</p>
+    <a href="{{ url_for('busca.index') }}" class="btn btn-primary">Nova Busca</a>
+</div>
+{% endif %}
+{% endblock %}

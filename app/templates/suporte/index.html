@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Central de Suporte</h2>
+    </div>
+    
+    <p>Precisa de ajuda? Nossa equipe está aqui para resolver suas dúvidas e problemas.</p>
+    
+    <div class="grid grid-2">
+        <div class="card">
+            <h3>Perguntas Frequentes</h3>
+            <div style="margin-top: 1rem;">
+                <details>
+                    <summary><strong>Como faço para reservar uma vaga?</strong></summary>
+                    <p>Acesse o dashboard, encontre a monitoria desejada e clique em "Reservar Vaga".</p>
+                </details>
+                
+                <details style="margin-top: 0.5rem;">
+                    <summary><strong>Como registro minha presença?</strong></summary>
+                    <p>Use o código de 6 dígitos fornecido pelo monitor na opção "Registrar Presença".</p>
+                </details>
+                
+                <details style="margin-top: 0.5rem;">
+                    <summary><strong>Posso cancelar uma reserva?</strong></summary>
+                    <p>Sim, você pode cancelar sua reserva a qualquer momento no dashboard.</p>
+                </details>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Precisa de Mais Ajuda?</h3>
+            <p>Se não encontrou a resposta para sua dúvida, abra um ticket de suporte.</p>
+            
+            {% if session.user_id %}
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('suporte.criar_ticket') }}" class="btn btn-primary">Abrir Ticket</a>
+                    <a href="{{ url_for('suporte.meus_tickets') }}" class="btn btn-secondary">Meus Tickets</a>
+                </div>
+            {% else %}
+                <p><a href="{{ url_for('auth.login') }}">Faça login</a> para abrir um ticket de suporte.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
