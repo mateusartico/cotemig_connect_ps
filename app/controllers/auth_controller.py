@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.repositories.usuario_repository import UsuarioRepository
+from app.models.entities import Usuario
 import re
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -48,7 +49,7 @@ def cadastro():
         elif len(senha) < 8:
             flash('Senha deve ter pelo menos 8 caracteres', 'error')
         else:
-            usuario = usuario_repo.create(nome=nome, email=email, tipo=tipo)
+            usuario = Usuario(nome=nome, email=email, tipo=tipo)
             usuario.set_password(senha)
             codigo = usuario.gerar_codigo_verificacao()
             usuario_repo.save(usuario)
