@@ -1,14 +1,12 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from config.config import Config
-
-db = SQLAlchemy()
+from app.core.database_singleton import database, db
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    db.init_app(app)
+    database.init_app(app)
     
     # Registrar blueprints
     from app.controllers.auth_controller import auth_bp
@@ -17,6 +15,8 @@ def create_app():
     from app.controllers.busca_controller import busca_bp
     from app.controllers.avaliacao_controller import avaliacao_bp
     from app.controllers.suporte_controller import suporte_bp
+    from app.controllers.notificacao_controller import notificacao_bp
+    from app.controllers.favorito_controller import favorito_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -24,9 +24,11 @@ def create_app():
     app.register_blueprint(busca_bp)
     app.register_blueprint(avaliacao_bp)
     app.register_blueprint(suporte_bp)
+    app.register_blueprint(notificacao_bp)
+    app.register_blueprint(favorito_bp)
     
     # Criar tabelas
     with app.app_context():
-        db.create_all()
+        database.create_all()
     
     return app

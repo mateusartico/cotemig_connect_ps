@@ -15,26 +15,33 @@
             </div>
 
             <div class="form-group">
-                <label for="tipo" class="form-label">Tipo de Usuário</label>
-                <select id="tipo" name="tipo" class="form-control" required onchange="updateEmailHint()">
-                    <option value="">Selecione...</option>
-                    <option value="aluno">Aluno</option>
-                    <option value="monitor">Monitor</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" id="email" name="email" class="form-control" required>
+                <label for="email" class="form-label">Email Institucional</label>
+                <input type="email" id="email" name="email" class="form-control" required oninput="detectUserType()">
                 <div class="form-hint" id="emailHint">
-                    Selecione o tipo de usuário para ver o formato do email
+                    Alunos: 12345678@aluno.cotemig.com.br | Monitores: nome@cotemig.com.br
                 </div>
+                <div class="user-type-indicator" id="userTypeIndicator"></div>
             </div>
 
             <div class="form-group">
                 <label for="senha" class="form-label">Senha</label>
-                <input type="password" id="senha" name="senha" class="form-control" required>
+                <input type="password" id="senha" name="senha" class="form-control" required oninput="checkPasswordStrength()">
+                <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText">Digite uma senha</div>
+                    <div class="strength-requirements" id="strengthRequirements">
+                        <div class="req" id="req-length">• Mínimo 8 caracteres</div>
+                        <div class="req" id="req-upper">• Uma letra maiúscula</div>
+                        <div class="req" id="req-lower">• Uma letra minúscula</div>
+                        <div class="req" id="req-number">• Um número</div>
+                        <div class="req" id="req-special">• Um caractere especial</div>
+                    </div>
+                </div>
             </div>
+            
+            <input type="hidden" id="tipo" name="tipo" value="">
 
             <button type="submit" class="auth-submit">Cadastrar</button>
         </form>
@@ -47,16 +54,72 @@
 </div>
 
 <script>
-function updateEmailHint() {
-    const tipo = document.getElementById('tipo').value;
-    const hint = document.getElementById('emailHint');
+function detectUserType() {
+    const email = document.getElementById('email').value;
+    const tipoInput = document.getElementById('tipo');
+    const indicator = document.getElementById('userTypeIndicator');
     
-    if (tipo === 'aluno') {
-        hint.textContent = 'Use seu email institucional: @aluno.cotemig.com.br';
-    } else if (tipo === 'monitor') {
-        hint.textContent = 'Use seu email institucional: @cotemig.com.br';
+    // Verifica se é aluno (8 números + @aluno.cotemig.com.br)
+    const alunoPattern = /^\d{8}@aluno\.cotemig\.com\.br$/;
+    // Verifica se é monitor (@cotemig.com.br)
+    const monitorPattern = /^[a-zA-Z][a-zA-Z0-9._-]*@cotemig\.com\.br$/;
+    
+    if (alunoPattern.test(email)) {
+        tipoInput.value = 'aluno';
+        indicator.innerHTML = '<span class="user-type aluno">👨‍🎓 Aluno detectado</span>';
+    } else if (monitorPattern.test(email)) {
+        tipoInput.value = 'monitor';
+        indicator.innerHTML = '<span class="user-type monitor">👨‍🏫 Monitor detectado</span>';
     } else {
-        hint.textContent = 'Selecione o tipo de usuário para ver o formato do email';
+        tipoInput.value = '';
+        indicator.innerHTML = '<span class="user-type invalid">⚠️ Email inválido</span>';
+    }
+}
+
+function checkPasswordStrength() {
+    const password = document.getElementById('senha').value;
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    
+    const requirements = {
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /\d/.test(password),
+        special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+    
+    // Atualizar indicadores visuais
+    Object.keys(requirements).forEach(req => {
+        const element = document.getElementById(`req-${req}`);
+        if (requirements[req]) {
+            element.classList.add('met');
+        } else {
+            element.classList.remove('met');
+        }
+    });
+    
+    // Calcular força
+    const metCount = Object.values(requirements).filter(Boolean).length;
+    const strength = (metCount / 5) * 100;
+    
+    strengthFill.style.width = strength + '%';
+    
+    if (strength === 0) {
+        strengthFill.className = 'strength-fill';
+        strengthText.textContent = 'Digite uma senha';
+    } else if (strength < 40) {
+        strengthFill.className = 'strength-fill weak';
+        strengthText.textContent = 'Senha fraca';
+    } else if (strength < 80) {
+        strengthFill.className = 'strength-fill medium';
+        strengthText.textContent = 'Senha média';
+    } else if (strength < 100) {
+        strengthFill.className = 'strength-fill strong';
+        strengthText.textContent = 'Senha forte';
+    } else {
+        strengthFill.className = 'strength-fill excellent';
+        strengthText.textContent = 'Senha excelente';
     }
 }
 </script>

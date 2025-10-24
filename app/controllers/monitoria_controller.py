@@ -1,5 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.repositories.monitoria_repository import MonitoriaRepository, ReservaRepository, PresencaRepository, DisciplinaRepository
+from app.core.factory import EntityFactoryProvider
+from app.core.strategy import ValidationContext, MonitoriaValidationStrategy
+from app.core.decorator import login_required, monitor_required, audit_log
+from app.core.observer import monitoria_subject
 from datetime import datetime
 
 monitoria_bp = Blueprint('monitoria', __name__, url_prefix='/monitoria')
@@ -8,20 +12,12 @@ reserva_repo = ReservaRepository()
 presenca_repo = PresencaRepository()
 disciplina_repo = DisciplinaRepository()
 
-def login_required(f):
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
+
 
 @monitoria_bp.route('/criar', methods=['GET', 'POST'])
-@login_required
+@monitor_required
+@audit_log('Criação de monitoria')
 def criar():
-    if session.get('user_tipo') != 'monitor':
-        flash('Acesso negado', 'error')
-        return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
         titulo = request.form.get('titulo')
@@ -35,14 +31,41 @@ def criar():
         
         data_hora = datetime.strptime(f"{data_str} {hora_str}", "%Y-%m-%d %H:%M")
         
+        # Usar Strategy para validação
+        dados = {
+            'titulo': titulo,
+            'data_hora': data_hora,
+            'vagas_total': vagas_total
+        }
+        
+        validator = ValidationContext()
+        validator.add_strategy(MonitoriaValidationStrategy())
+        errors = validator.validate(dados)
+        
         if data_hora <= datetime.now():
-            flash('Data deve ser futura', 'error')
+            errors['data_hora'] = errors.get('data_hora', []) + ['Data deve ser futura']
+        
+        if errors:
+            for field, field_errors in errors.items():
+                for error in field_errors:
+                    flash(error, 'error')
         else:
-            monitoria_repo.create(
+            # Usar Factory para criar monitoria
+            monitoria = EntityFactoryProvider.create_entity('monitoria',
                 titulo=titulo, descricao=descricao, data_hora=data_hora,
                 duracao=duracao, vagas_total=vagas_total, local=local,
-                monitor_id=session['user_id'], disciplina_id=disciplina_id
+                monitor_id=session['user_id'], disciplina_id=disciplina_id,
+                gerar_codigo=True
             )
+            monitoria_repo.save(monitoria)
+            
+            # Notificar observadores
+            monitoria_subject.criar_monitoria({
+                'id': monitoria.id,
+                'titulo': monitoria.titulo,
+                'monitor_id': monitoria.monitor_id
+            })
+            
             flash('Monitoria criada com sucesso!', 'success')
             return redirect(url_for('main.dashboard'))
     

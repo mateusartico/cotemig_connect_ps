@@ -1,22 +1,51 @@
 from app.repositories.base_repository import BaseRepository
 from app.models.entities import Monitoria, Reserva, Presenca, Disciplina
 from datetime import datetime
+from sqlalchemy import or_, and_, desc
 
 class MonitoriaRepository(BaseRepository):
     def __init__(self):
         super().__init__(Monitoria)
     
     def get_by_monitor(self, monitor_id):
-        return self.model.query.filter_by(monitor_id=monitor_id).order_by(Monitoria.data_hora.desc()).all()
+        """Busca monitorias por monitor"""
+        return self.model.query.filter_by(monitor_id=monitor_id)\
+                   .order_by(desc(self.model.data_hora)).all()
     
     def get_proximas(self):
+        """Busca próximas monitorias agendadas"""
         return self.model.query.filter(
-            Monitoria.data_hora >= datetime.now(),
-            Monitoria.status == 'agendada'
-        ).order_by(Monitoria.data_hora).all()
+            self.model.data_hora >= datetime.now(),
+            self.model.status == 'agendada'
+        ).order_by(self.model.data_hora).all()
     
     def get_by_codigo_presenca(self, codigo):
-        return self.model.query.filter_by(codigo_presenca=codigo).first()
+        """Busca monitoria por código de presença"""
+        return self.find_one_by(codigo_presenca=codigo)
+    
+    def buscar(self, termo=None, categoria=None, avaliacao_min=None):
+        """Busca avançada de monitorias"""
+        query = self.model.query.filter(self.model.status == 'agendada')
+        
+        if termo:
+            termo_lower = f"%{termo.lower()}%"
+            query = query.filter(or_(
+                self.model.titulo.ilike(termo_lower),
+                self.model.descricao.ilike(termo_lower),
+                self.model.tags.ilike(termo_lower)
+            ))
+        
+        if categoria:
+            query = query.join(Disciplina).filter(Disciplina.categoria == categoria)
+        
+        return query.order_by(self.model.data_hora).all()
+    
+    def get_com_vagas(self):
+        """Busca monitorias com vagas disponíveis"""
+        return self.model.query.filter(
+            self.model.vagas_ocupadas < self.model.vagas_total,
+            self.model.status == 'agendada'
+        ).all()
 
 class ReservaRepository(BaseRepository):
     def __init__(self):

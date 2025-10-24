@@ -1,28 +1,28 @@
 from flask import Blueprint, render_template, request, session, jsonify
 from app.repositories.monitoria_repository import MonitoriaRepository, DisciplinaRepository
 from app.repositories.usuario_repository import UsuarioRepository
+from app.repositories.historico_busca_repository import HistoricoBuscaRepository
 from app.models.entities import HistoricoBusca
-from app import db
+from app.core.strategy import SearchContext, FullTextSearchStrategy, TitleSearchStrategy
+from app.core.decorator import login_required, log_execution_time, cache_result
+from app.core.database_singleton import db
 import json
 
 busca_bp = Blueprint('busca', __name__, url_prefix='/busca')
 monitoria_repo = MonitoriaRepository()
 disciplina_repo = DisciplinaRepository()
 usuario_repo = UsuarioRepository()
+historico_repo = HistoricoBuscaRepository()
 
-def login_required(f):
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return jsonify({'error': 'Login necessário'}), 401
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
+
 
 @busca_bp.route('/')
 def index():
     return render_template('busca/index.html')
 
 @busca_bp.route('/pesquisar')
+@log_execution_time
+@cache_result(timeout=60)
 def pesquisar():
     termo = request.args.get('q', '').strip()
     categoria = request.args.get('categoria', '')
@@ -34,28 +34,14 @@ def pesquisar():
             'categoria': categoria,
             'avaliacao_min': avaliacao_min
         }
-        historico = HistoricoBusca(
+        historico_repo.create(
             usuario_id=session['user_id'],
             termo_busca=termo,
             filtros=json.dumps(filtros)
         )
-        db.session.add(historico)
-        db.session.commit()
     
-    # Buscar monitorias
-    query = monitoria_repo.model.query.filter_by(status='agendada')
-    
-    if termo:
-        query = query.filter(
-            monitoria_repo.model.titulo.contains(termo) |
-            monitoria_repo.model.descricao.contains(termo) |
-            monitoria_repo.model.tags.contains(termo)
-        )
-    
-    if categoria:
-        query = query.join(monitoria_repo.model.disciplina).filter_by(categoria=categoria)
-    
-    monitorias = query.all()
+    # Usar Strategy para busca
+    monitorias = monitoria_repo.buscar(termo, categoria, avaliacao_min)
     
     # Filtrar por avaliação se especificado
     if avaliacao_min:
@@ -74,10 +60,7 @@ def pesquisar():
 @busca_bp.route('/historico')
 @login_required
 def historico():
-    historico = db.session.query(HistoricoBusca).filter_by(
-        usuario_id=session['user_id']
-    ).order_by(HistoricoBusca.created_at.desc()).limit(20).all()
-    
+    historico = historico_repo.get_by_usuario(session['user_id'], limit=20)
     return render_template('busca/historico.html', historico=historico)
 
 @busca_bp.route('/comparar')

@@ -21,8 +21,20 @@
                         <a href="{{ url_for('monitoria.registrar_presenca') }}">Registrar Presença</a>
                     {% endif %}
                     <a href="{{ url_for('suporte.index') }}">Suporte</a>
+                    <div class="notification-bell" onclick="toggleNotifications()">
+                        🔔 <span class="notification-count" id="notificationCount">0</span>
+                    </div>
                     <a href="{{ url_for('auth.logout') }}">Sair</a>
                 </nav>
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-header">
+                        <h4>Notificações</h4>
+                        <button onclick="markAllAsRead()">Marcar todas como lidas</button>
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <div class="no-notifications">Nenhuma notificação</div>
+                    </div>
+                </div>
                 <button class="menu-toggle" onclick="toggleMenu()">☰</button>
             </div>
         </div>
@@ -48,6 +60,54 @@
             const menu = document.getElementById('navMenu');
             menu.classList.toggle('active');
         }
+        
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+            loadNotifications();
+        }
+        
+        function loadNotifications() {
+            fetch('/api/notificacoes/recentes')
+                .then(response => response.json())
+                .then(notifications => {
+                    const list = document.getElementById('notificationList');
+                    const count = document.getElementById('notificationCount');
+                    
+                    if (notifications.length === 0) {
+                        list.innerHTML = '<div class="no-notifications">Nenhuma notificação</div>';
+                        count.textContent = '0';
+                        count.style.display = 'none';
+                    } else {
+                        list.innerHTML = notifications.map(n => `
+                            <div class="notification-item ${n.lida ? 'read' : 'unread'}">
+                                <div class="notification-title">${n.titulo}</div>
+                                <div class="notification-message">${n.mensagem}</div>
+                                <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                            </div>
+                        `).join('');
+                        
+                        const unreadCount = notifications.filter(n => !n.lida).length;
+                        count.textContent = unreadCount;
+                        count.style.display = unreadCount > 0 ? 'inline' : 'none';
+                    }
+                })
+                .catch(error => console.error('Erro ao carregar notificações:', error));
+        }
+        
+        function markAllAsRead() {
+            // Implementação para marcar todas como lidas
+            document.getElementById('notificationCount').style.display = 'none';
+        }
+        
+        // Carregar notificações ao carregar a página
+        {% if session.user_id %}
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+            // Atualizar notificações a cada 30 segundos
+            setInterval(loadNotifications, 30000);
+        });
+        {% endif %}
     </script>
 </body>
 </html>

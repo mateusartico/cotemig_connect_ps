@@ -1,17 +1,10 @@
 from flask import Blueprint, render_template, session, redirect, url_for
 from app.repositories.monitoria_repository import MonitoriaRepository, ReservaRepository
+from app.core.decorator import login_required
 
 main_bp = Blueprint('main', __name__)
 monitoria_repo = MonitoriaRepository()
 reserva_repo = ReservaRepository()
-
-def login_required(f):
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
 
 @main_bp.route('/')
 def index():

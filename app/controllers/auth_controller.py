@@ -1,19 +1,37 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.repositories.usuario_repository import UsuarioRepository
 from app.models.entities import Usuario
+from app.core.factory import EntityFactoryProvider
+from app.core.strategy import ValidationContext, EmailValidationStrategy, PasswordValidationStrategy
+from app.core.decorator import audit_log, validate_input
 import re
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 usuario_repo = UsuarioRepository()
 
-def validar_email(email, tipo):
-    if tipo == 'aluno':
-        return email.endswith('@aluno.cotemig.com.br')
-    elif tipo == 'monitor':
-        return email.endswith('@cotemig.com.br')
-    return False
+def detectar_tipo_usuario(email):
+    """Detecta automaticamente o tipo de usuário baseado no email"""
+    import re
+    
+    # Padrão para aluno: 8 dígitos + @aluno.cotemig.com.br
+    aluno_pattern = r'^\d{8}@aluno\.cotemig\.com\.br$'
+    # Padrão para monitor: qualquer coisa + @cotemig.com.br (exceto aluno)
+    monitor_pattern = r'^[a-zA-Z][a-zA-Z0-9._-]*@cotemig\.com\.br$'
+    
+    if re.match(aluno_pattern, email):
+        return 'aluno'
+    elif re.match(monitor_pattern, email):
+        return 'monitor'
+    else:
+        return None
+
+def validar_email(email):
+    """Valida se o email está no formato correto"""
+    tipo = detectar_tipo_usuario(email)
+    return tipo is not None
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@audit_log('Login de usuário')
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
@@ -35,22 +53,30 @@ def login():
     return render_template('auth/login.html')
 
 @auth_bp.route('/cadastro', methods=['GET', 'POST'])
+@audit_log('Cadastro de usuário')
 def cadastro():
     if request.method == 'POST':
         nome = request.form.get('nome')
         email = request.form.get('email')
         senha = request.form.get('senha')
-        tipo = request.form.get('tipo')
         
-        if not validar_email(email, tipo):
-            flash('Email inválido para o tipo de usuário', 'error')
+        # Detectar tipo automaticamente
+        tipo = detectar_tipo_usuario(email)
+        
+        if not tipo:
+            flash('Email inválido. Use o formato institucional correto.', 'error')
         elif usuario_repo.get_by_email(email):
             flash('Email já cadastrado', 'error')
         elif len(senha) < 8:
             flash('Senha deve ter pelo menos 8 caracteres', 'error')
         else:
-            usuario = Usuario(nome=nome, email=email, tipo=tipo)
-            usuario.set_password(senha)
+            # Usar Factory para criar usuário
+            usuario = EntityFactoryProvider.create_entity('usuario', 
+                nome=nome, 
+                email=email, 
+                tipo=tipo,
+                senha=senha
+            )
             codigo = usuario.gerar_codigo_verificacao()
             usuario_repo.save(usuario)
             
