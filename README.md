@@ -9,29 +9,53 @@ O Cotemig Connect é uma plataforma web que permite aos alunos encontrar e agend
 ## Requisitos Funcionais Implementados
 
 **RF01** - Cadastro de usuários com informações básicas (nome, email, tipo)
+
 **RF02** - Sistema de login seguro com validação de credenciais
+
 **RF03** - Redefinição de senha através de token de recuperação
+
 **RF04** - Verificação de conta por código de 6 dígitos
+
 **RF05** - Detecção automática de tipo de usuário por padrão de email
+
 **RF06** - Validação de email institucional (@cotemig.com.br e @aluno.cotemig.com.br)
+
 **RF07** - Criação de monitorias pelos monitores
+
 **RF08** - Agendamento de sessões com data, hora e local
+
 **RF09** - Sistema de reserva de vagas pelos alunos
+
 **RF10** - Cancelamento de reservas
+
 **RF11** - Controle de vagas disponíveis em tempo real
+
 **RF12** - Geração de código de presença pelo monitor
+
 **RF13** - Registro de presença dos alunos via código
+
 **RF14** - Busca avançada por palavras-chave
+
 **RF15** - Filtros de busca por categoria e avaliação
+
 **RF16** - Sistema de avaliações de 1-5 estrelas
+
 **RF17** - Comentários nas avaliações
+
 **RF18** - Histórico de buscas realizadas pelo usuário
+
 **RF19** - Comparador lado a lado de múltiplas monitorias
+
 **RF20** - Sistema de tickets de suporte
+
 **RF21** - Dashboard personalizado por tipo de usuário
+
 **RF22** - Interface responsiva para dispositivos móveis
+
 **RF23** - Sistema de notificações em tempo real
+
 **RF24** - Controle de sessões seguro
+
 **RF25** - Logs de auditoria das ações dos usuários
 
 ## Observações importantes
@@ -126,8 +150,10 @@ python test_padroes.py
 ## Usuários de Teste
 
 - **Admin**: admin@cotemig.com.br / admin123
-- **Monitor**: joao.silva@cotemig.com.br / monitor123  
-- **Aluno**: maria.santos@aluno.cotemig.com.br / aluno123
+- **Monitor 1**: monitor-mateusartico@cotemig.com.br / monitor123
+- **Monitor 2**: monitor-anaelisa@cotemig.com.br / monitor123
+- **Aluno 1**: 22301461@aluno.cotemig.com.br / aluno123
+- **Aluno 2**: 22302832@aluno.cotemig.com.br / aluno123
 
 ## Equipe
 
