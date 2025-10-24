@@ -1,24 +1,17 @@
-"""
-Service layer para lógica de negócio de monitorias
-"""
 from app.repositories.monitoria_repository import MonitoriaRepository, ReservaRepository, PresencaRepository
 from app.core.observer import monitoria_subject
 from app.core.factory import EntityFactoryProvider
 
 class MonitoriaService:
-    """Service para gerenciar monitorias"""
-    
     def __init__(self):
         self.monitoria_repo = MonitoriaRepository()
         self.reserva_repo = ReservaRepository()
         self.presenca_repo = PresencaRepository()
     
     def criar_monitoria(self, dados_monitoria):
-        """Cria uma nova monitoria"""
         monitoria = EntityFactoryProvider.create_entity('monitoria', **dados_monitoria)
         monitoria = self.monitoria_repo.save(monitoria)
         
-        # Notificar observadores
         monitoria_subject.criar_monitoria({
             'id': monitoria.id,
             'titulo': monitoria.titulo,
@@ -28,7 +21,6 @@ class MonitoriaService:
         return monitoria
     
     def reservar_vaga(self, aluno_id, monitoria_id):
-        """Reserva uma vaga na monitoria"""
         monitoria = self.monitoria_repo.get_by_id(monitoria_id)
         
         if not monitoria:
@@ -40,17 +32,14 @@ class MonitoriaService:
         if self.reserva_repo.existe_reserva(aluno_id, monitoria_id):
             raise ValueError("Você já tem reserva nesta monitoria")
         
-        # Criar reserva
         reserva = self.reserva_repo.create(aluno_id=aluno_id, monitoria_id=monitoria_id)
         
-        # Atualizar vagas
         monitoria.vagas_ocupadas += 1
         self.monitoria_repo.save(monitoria)
         
         return reserva
     
     def cancelar_reserva(self, aluno_id, monitoria_id):
-        """Cancela uma reserva"""
         reserva = self.reserva_repo.find_one_by(
             aluno_id=aluno_id, 
             monitoria_id=monitoria_id, 
@@ -60,11 +49,9 @@ class MonitoriaService:
         if not reserva:
             raise ValueError("Reserva não encontrada")
         
-        # Cancelar reserva
         reserva.status = 'cancelada'
         self.reserva_repo.save(reserva)
         
-        # Liberar vaga
         monitoria = self.monitoria_repo.get_by_id(monitoria_id)
         monitoria.vagas_ocupadas -= 1
         self.monitoria_repo.save(monitoria)
@@ -72,7 +59,6 @@ class MonitoriaService:
         return reserva
     
     def iniciar_monitoria(self, monitor_id, monitoria_id):
-        """Inicia uma monitoria"""
         monitoria = self.monitoria_repo.get_by_id(monitoria_id)
         
         if not monitoria or monitoria.monitor_id != monitor_id:
@@ -81,7 +67,6 @@ class MonitoriaService:
         if monitoria.status != 'agendada':
             raise ValueError("Monitoria não pode ser iniciada")
         
-        # Gerar código e iniciar
         codigo = monitoria.gerar_codigo_presenca()
         monitoria.status = 'em_andamento'
         self.monitoria_repo.save(monitoria)
@@ -89,7 +74,6 @@ class MonitoriaService:
         return codigo
     
     def finalizar_monitoria(self, monitor_id, monitoria_id):
-        """Finaliza uma monitoria"""
         monitoria = self.monitoria_repo.get_by_id(monitoria_id)
         
         if not monitoria or monitoria.monitor_id != monitor_id:
@@ -98,17 +82,14 @@ class MonitoriaService:
         if monitoria.status != 'em_andamento':
             raise ValueError("Monitoria não está em andamento")
         
-        # Finalizar
         monitoria.status = 'finalizada'
         self.monitoria_repo.save(monitoria)
         
-        # Notificar observadores
         monitoria_subject.finalizar_monitoria({'id': monitoria_id})
         
         return monitoria
     
     def registrar_presenca(self, aluno_id, codigo_presenca):
-        """Registra presença do aluno"""
         monitoria = self.monitoria_repo.get_by_codigo_presenca(codigo_presenca)
         
         if not monitoria:
@@ -120,7 +101,6 @@ class MonitoriaService:
         if self.presenca_repo.existe_presenca(aluno_id, monitoria.id):
             raise ValueError("Presença já registrada")
         
-        # Registrar presença
         presenca = self.presenca_repo.create(
             aluno_id=aluno_id, 
             monitoria_id=monitoria.id

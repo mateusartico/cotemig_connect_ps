@@ -31,7 +31,6 @@ def criar():
         
         data_hora = datetime.strptime(f"{data_str} {hora_str}", "%Y-%m-%d %H:%M")
         
-        # Usar Strategy para validação
         dados = {
             'titulo': titulo,
             'data_hora': data_hora,
@@ -50,7 +49,6 @@ def criar():
                 for error in field_errors:
                     flash(error, 'error')
         else:
-            # Usar Factory para criar monitoria
             monitoria = EntityFactoryProvider.create_entity('monitoria',
                 titulo=titulo, descricao=descricao, data_hora=data_hora,
                 duracao=duracao, vagas_total=vagas_total, local=local,
@@ -59,12 +57,15 @@ def criar():
             )
             monitoria_repo.save(monitoria)
             
-            # Notificar observadores
             monitoria_subject.criar_monitoria({
                 'id': monitoria.id,
                 'titulo': monitoria.titulo,
                 'monitor_id': monitoria.monitor_id
             })
+            
+            from app.services.notificacao_service import NotificacaoService
+            notif_service = NotificacaoService()
+            notif_service.notificar_nova_monitoria(monitoria.id)
             
             flash('Monitoria criada com sucesso!', 'success')
             return redirect(url_for('main.dashboard'))
@@ -88,9 +89,23 @@ def reservar(monitoria_id):
     elif reserva_repo.existe_reserva(session['user_id'], monitoria_id):
         flash('Você já tem reserva nesta monitoria', 'error')
     else:
-        reserva_repo.create(aluno_id=session['user_id'], monitoria_id=monitoria_id)
+        reserva_existente = reserva_repo.model.query.filter_by(
+            aluno_id=session['user_id'], 
+            monitoria_id=monitoria_id
+        ).first()
+        
+        if reserva_existente and reserva_existente.status == 'cancelada':
+            reserva_existente.status = 'confirmada'
+            reserva_repo.save(reserva_existente)
+        else:
+            reserva_repo.create(aluno_id=session['user_id'], monitoria_id=monitoria_id)
         monitoria.vagas_ocupadas += 1
         monitoria_repo.save(monitoria)
+        
+        from app.services.notificacao_service import NotificacaoService
+        notif_service = NotificacaoService()
+        notif_service.notificar_reserva_confirmada(session['user_id'], monitoria_id)
+        
         flash('Reserva realizada com sucesso!', 'success')
     
     return redirect(url_for('main.dashboard'))
@@ -136,6 +151,11 @@ def iniciar(monitoria_id):
         codigo = monitoria.gerar_codigo_presenca()
         monitoria.status = 'em_andamento'
         monitoria_repo.save(monitoria)
+        
+        from app.services.notificacao_service import NotificacaoService
+        notif_service = NotificacaoService()
+        notif_service.notificar_monitoria_iniciada(monitoria_id)
+        
         flash(f'Monitoria iniciada! Código de presença: {codigo}', 'success')
     
     return redirect(url_for('main.dashboard'))

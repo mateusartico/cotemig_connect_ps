@@ -28,7 +28,6 @@ def pesquisar():
     categoria = request.args.get('categoria', '')
     avaliacao_min = request.args.get('avaliacao', type=int)
     
-    # Salvar no histórico se usuário logado
     if 'user_id' in session and termo:
         filtros = {
             'categoria': categoria,
@@ -40,10 +39,8 @@ def pesquisar():
             filtros=json.dumps(filtros)
         )
     
-    # Usar Strategy para busca
     monitorias = monitoria_repo.buscar(termo, categoria, avaliacao_min)
     
-    # Filtrar por avaliação se especificado
     if avaliacao_min:
         monitorias = [m for m in monitorias if m.media_avaliacoes >= avaliacao_min]
     
@@ -70,6 +67,6 @@ def comparar():
         return render_template('busca/comparar.html', error="Selecione pelo menos 2 monitorias")
     
     monitorias = [monitoria_repo.get_by_id(id) for id in ids]
-    monitorias = [m for m in monitorias if m]  # Remove None
+    monitorias = [m for m in monitorias if m]
     
     return render_template('busca/comparar.html', monitorias=monitorias)

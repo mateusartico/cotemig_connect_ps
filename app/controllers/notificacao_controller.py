@@ -1,57 +1,48 @@
-from flask import Blueprint, jsonify, session
-from app.repositories.usuario_repository import UsuarioRepository
+from flask import Blueprint, render_template, request, jsonify, session
 from app.core.decorator import login_required
-from datetime import datetime, timedelta
+from app.repositories.notificacao_repository import NotificacaoRepository
+from app.services.notificacao_service import NotificacaoService
 
 notificacao_bp = Blueprint('notificacao', __name__, url_prefix='/api/notificacoes')
-usuario_repo = UsuarioRepository()
+notificacao_repo = NotificacaoRepository()
+notificacao_service = NotificacaoService()
 
 @notificacao_bp.route('/recentes')
 @login_required
-def get_notificacoes():
-    """API para buscar notificações do usuário"""
-    user_id = session.get('user_id')
-    user_tipo = session.get('user_tipo')
+def recentes():
+    notificacoes = notificacao_repo.get_by_usuario(session['user_id'], limit=10)
     
-    # Simulação de notificações baseadas no tipo de usuário
-    notificacoes = []
+    notifications = []
+    for notif in notificacoes:
+        notifications.append({
+            'id': notif.id,
+            'titulo': notif.titulo,
+            'mensagem': notif.mensagem,
+            'timestamp': notif.created_at.isoformat(),
+            'lida': notif.lida,
+            'tipo': notif.tipo
+        })
     
-    if user_tipo == 'aluno':
-        notificacoes = [
-            {
-                'id': 1,
-                'titulo': 'Nova monitoria disponível',
-                'mensagem': 'Monitoria de Python Básico foi criada',
-                'tipo': 'info',
-                'timestamp': (datetime.now() - timedelta(minutes=5)).isoformat(),
-                'lida': False
-            },
-            {
-                'id': 2,
-                'titulo': 'Lembrete de monitoria',
-                'mensagem': 'Sua monitoria de SQL começa em 1 hora',
-                'tipo': 'warning',
-                'timestamp': (datetime.now() - timedelta(hours=1)).isoformat(),
-                'lida': False
-            }
-        ]
-    elif user_tipo == 'monitor':
-        notificacoes = [
-            {
-                'id': 3,
-                'titulo': 'Nova reserva',
-                'mensagem': 'Um aluno se inscreveu na sua monitoria',
-                'tipo': 'success',
-                'timestamp': (datetime.now() - timedelta(minutes=10)).isoformat(),
-                'lida': False
-            }
-        ]
-    
-    return jsonify(notificacoes)
+    return jsonify(notifications)
 
 @notificacao_bp.route('/marcar-lida/<int:notificacao_id>', methods=['POST'])
 @login_required
-def marcar_como_lida(notificacao_id):
-    """Marca notificação como lida"""
-    # Simulação - em produção salvaria no banco
-    return jsonify({'success': True})
+def marcar_lida(notificacao_id):
+    notificacao = notificacao_repo.marcar_como_lida(notificacao_id, session['user_id'])
+    if notificacao:
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 404
+
+@notificacao_bp.route('/marcar-todas-lidas', methods=['POST'])
+@login_required
+def marcar_todas_lidas():
+    count = notificacao_repo.marcar_todas_como_lidas(session['user_id'])
+    return jsonify({'success': True, 'count': count})
+
+@notificacao_bp.route('/gerar-automaticas', methods=['POST'])
+@login_required
+def gerar_automaticas():
+    if session.get('user_tipo') == 'admin':
+        notificacao_service.gerar_notificacoes_automaticas()
+        return jsonify({'success': True, 'message': 'Notificações geradas'})
+    return jsonify({'success': False}), 403

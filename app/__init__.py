@@ -8,7 +8,7 @@ def create_app():
     
     database.init_app(app)
     
-    # Registrar blueprints
+
     from app.controllers.auth_controller import auth_bp
     from app.controllers.main_controller import main_bp
     from app.controllers.monitoria_controller import monitoria_bp
@@ -27,7 +27,7 @@ def create_app():
     app.register_blueprint(notificacao_bp)
     app.register_blueprint(favorito_bp)
     
-    # Criar tabelas
+
     with app.app_context():
         database.create_all()
     

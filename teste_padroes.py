@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Testes para demonstrar o funcionamento dos padrões de projeto
-"""
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -14,8 +12,7 @@ from app.core.strategy import SearchContext, TitleSearchStrategy, FullTextSearch
 from app.repositories.usuario_repository import UsuarioRepository
 
 def test_singleton():
-    """Testa o padrão Singleton"""
-    print("🔒 Testando Padrão Singleton...")
+    print("Testando Padrão Singleton...")
     
     # Criar múltiplas instâncias
     db1 = DatabaseSingleton()
@@ -27,11 +24,10 @@ def test_singleton():
     assert db1 is db3, "Singleton falhou: instância global diferente"
     assert db1.db is db2.db, "Singleton falhou: objetos SQLAlchemy diferentes"
     
-    print("✅ Singleton funcionando corretamente - uma única instância")
+    print("Singleton funcionando corretamente - uma única instância")
 
 def test_factory():
-    """Testa o padrão Factory Method"""
-    print("\n🏭 Testando Padrão Factory Method...")
+    print("\nTestando Padrão Factory Method...")
     
     # Criar usuário via factory
     usuario_data = {
@@ -48,11 +44,10 @@ def test_factory():
     assert usuario.tipo == 'monitor', "Factory falhou: tipo incorreto"
     assert usuario.check_password('senha123'), "Factory falhou: senha não foi definida"
     
-    print("✅ Factory Method funcionando corretamente - objeto criado com sucesso")
+    print("Factory Method funcionando corretamente - objeto criado com sucesso")
 
 def test_observer():
-    """Testa o padrão Observer"""
-    print("\n👁️ Testando Padrão Observer...")
+    print("\nTestando Padrão Observer...")
     
     # Criar subject e observer
     subject = MonitoriaSubject()
@@ -72,11 +67,10 @@ def test_observer():
     assert len(observer.notifications) == 1, "Observer falhou: notificação não recebida"
     assert observer.notifications[0]['type'] == 'monitoria_criada', "Observer falhou: tipo incorreto"
     
-    print("✅ Observer funcionando corretamente - notificação recebida")
+    print("Observer funcionando corretamente - notificação recebida")
 
 def test_strategy():
-    """Testa o padrão Strategy"""
-    print("\n🎯 Testando Padrão Strategy...")
+    print("\nTestando Padrão Strategy...")
     
     # Criar objetos de teste
     class MockMonitoria:
@@ -105,11 +99,10 @@ def test_strategy():
     assert len(results) == 1, "Strategy falhou: resultado incorreto para busca completa"
     assert results[0].titulo == "Banco de Dados", "Strategy falhou: monitoria incorreta"
     
-    print("✅ Strategy funcionando corretamente - algoritmos intercambiáveis")
+    print("Strategy funcionando corretamente - algoritmos intercambiáveis")
 
 def test_repository():
-    """Testa o padrão Repository"""
-    print("\n📚 Testando Padrão Repository...")
+    print("\nTestando Padrão Repository...")
     
     app = create_app()
     with app.app_context():
@@ -122,11 +115,10 @@ def test_repository():
         assert hasattr(repo, 'find_by'), "Repository falhou: método find_by não existe"
         assert hasattr(repo, 'get_by_email'), "Repository falhou: método específico não existe"
         
-        print("✅ Repository funcionando corretamente - interface implementada")
+        print("Repository funcionando corretamente - interface implementada")
 
 def test_mvc_separation():
-    """Testa a separação MVC"""
-    print("\n🏗️ Testando Separação MVC...")
+    print("\nTestando Separação MVC...")
     
     # Verificar estrutura de diretórios
     import os
@@ -151,11 +143,10 @@ def test_mvc_separation():
     repositories_path = os.path.join(app_path, 'repositories')
     assert os.path.exists(repositories_path), "MVC falhou: diretório repositories não existe"
     
-    print("✅ MVC funcionando corretamente - separação de camadas implementada")
+    print("MVC funcionando corretamente - separação de camadas implementada")
 
 def run_all_tests():
-    """Executa todos os testes"""
-    print("🧪 INICIANDO TESTES DOS PADRÕES DE PROJETO")
+    print("INICIANDO TESTES DOS PADRÕES DE PROJETO")
     print("=" * 50)
     
     try:
@@ -167,20 +158,20 @@ def run_all_tests():
         test_mvc_separation()
         
         print("\n" + "=" * 50)
-        print("🎉 TODOS OS TESTES PASSARAM COM SUCESSO!")
-        print("✅ Singleton: Instância única garantida")
-        print("✅ Factory Method: Criação padronizada de objetos")
-        print("✅ Observer: Sistema de notificações funcionando")
-        print("✅ Strategy: Algoritmos intercambiáveis implementados")
-        print("✅ Repository: Abstração de dados funcionando")
-        print("✅ MVC: Separação de camadas correta")
-        print("\n🏆 Sistema implementa corretamente todos os padrões!")
+        print("TODOS OS TESTES PASSARAM COM SUCESSO!")
+        print("Singleton: Instância única garantida")
+        print("Factory Method: Criação padronizada de objetos")
+        print("Observer: Sistema de notificações funcionando")
+        print("Strategy: Algoritmos intercambiáveis implementados")
+        print("Repository: Abstração de dados funcionando")
+        print("MVC: Separação de camadas correta")
+        print("\nSistema implementa corretamente todos os padrões!")
         
     except AssertionError as e:
-        print(f"\n❌ TESTE FALHOU: {e}")
+        print(f"\nTESTE FALHOU: {e}")
         return False
     except Exception as e:
-        print(f"\n💥 ERRO INESPERADO: {e}")
+        print(f"\nERRO INESPERADO: {e}")
         return False
     
     return True

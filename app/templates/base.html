@@ -80,7 +80,7 @@
                         count.style.display = 'none';
                     } else {
                         list.innerHTML = notifications.map(n => `
-                            <div class="notification-item ${n.lida ? 'read' : 'unread'}">
+                            <div class="notification-item ${n.lida ? 'read' : 'unread'}" onclick="markAsRead(${n.id})">
                                 <div class="notification-title">${n.titulo}</div>
                                 <div class="notification-message">${n.mensagem}</div>
                                 <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
@@ -96,15 +96,41 @@
         }
         
         function markAllAsRead() {
-            // Implementação para marcar todas como lidas
-            document.getElementById('notificationCount').style.display = 'none';
+            fetch('/api/notificacoes/marcar-todas-lidas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('notificationCount').style.display = 'none';
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Erro ao marcar como lidas:', error));
         }
         
-        // Carregar notificações ao carregar a página
+        function markAsRead(notificationId) {
+            fetch(`/api/notificacoes/marcar-lida/${notificationId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Erro ao marcar como lida:', error));
+        }
+        
         {% if session.user_id %}
         document.addEventListener('DOMContentLoaded', function() {
             loadNotifications();
-            // Atualizar notificações a cada 30 segundos
             setInterval(loadNotifications, 30000);
         });
         {% endif %}

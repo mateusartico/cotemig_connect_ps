@@ -10,12 +10,9 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 usuario_repo = UsuarioRepository()
 
 def detectar_tipo_usuario(email):
-    """Detecta automaticamente o tipo de usuário baseado no email"""
     import re
     
-    # Padrão para aluno: 8 dígitos + @aluno.cotemig.com.br
     aluno_pattern = r'^\d{8}@aluno\.cotemig\.com\.br$'
-    # Padrão para monitor: qualquer coisa + @cotemig.com.br (exceto aluno)
     monitor_pattern = r'^[a-zA-Z][a-zA-Z0-9._-]*@cotemig\.com\.br$'
     
     if re.match(aluno_pattern, email):
@@ -26,7 +23,6 @@ def detectar_tipo_usuario(email):
         return None
 
 def validar_email(email):
-    """Valida se o email está no formato correto"""
     tipo = detectar_tipo_usuario(email)
     return tipo is not None
 
@@ -60,7 +56,6 @@ def cadastro():
         email = request.form.get('email')
         senha = request.form.get('senha')
         
-        # Detectar tipo automaticamente
         tipo = detectar_tipo_usuario(email)
         
         if not tipo:
@@ -70,7 +65,6 @@ def cadastro():
         elif len(senha) < 8:
             flash('Senha deve ter pelo menos 8 caracteres', 'error')
         else:
-            # Usar Factory para criar usuário
             usuario = EntityFactoryProvider.create_entity('usuario', 
                 nome=nome, 
                 email=email, 

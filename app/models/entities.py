@@ -10,7 +10,7 @@ class Usuario(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha_hash = db.Column(db.String(255), nullable=False)
-    tipo = db.Column(db.String(20), nullable=False)  # aluno, monitor, admin
+    tipo = db.Column(db.String(20), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
     verificado = db.Column(db.Boolean, default=False)
     codigo_verificacao = db.Column(db.String(6))
@@ -31,6 +31,7 @@ class Usuario(db.Model):
         return check_password_hash(self.senha_hash, password)
     
     def gerar_codigo_verificacao(self):
+        # Gera código de 6 dígitos
         self.codigo_verificacao = str(secrets.randbelow(900000) + 100000)
         return self.codigo_verificacao
     
@@ -57,13 +58,13 @@ class Monitoria(db.Model):
     titulo = db.Column(db.String(200), nullable=False)
     descricao = db.Column(db.Text)
     data_hora = db.Column(db.DateTime, nullable=False)
-    duracao = db.Column(db.Integer, default=60)  # minutos
+    duracao = db.Column(db.Integer, default=60)
     vagas_total = db.Column(db.Integer, default=10)
     vagas_ocupadas = db.Column(db.Integer, default=0)
     local = db.Column(db.String(100))
     codigo_presenca = db.Column(db.String(6))
-    status = db.Column(db.String(20), default='agendada')  # agendada, em_andamento, finalizada, cancelada
-    tags = db.Column(db.String(200))  # palavras-chave separadas por vírgula
+    status = db.Column(db.String(20), default='agendada')
+    tags = db.Column(db.String(200))
     
     # Chaves estrangeiras
     monitor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
@@ -77,6 +78,7 @@ class Monitoria(db.Model):
     avaliacoes = db.relationship('Avaliacao', backref='monitoria', cascade='all, delete-orphan')
     
     def gerar_codigo_presenca(self):
+        # Gera código de 6 dígitos para presença
         self.codigo_presenca = str(secrets.randbelow(900000) + 100000)
         return self.codigo_presenca
     
@@ -96,7 +98,7 @@ class Reserva(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     aluno_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     monitoria_id = db.Column(db.Integer, db.ForeignKey('monitorias.id'), nullable=False)
-    status = db.Column(db.String(20), default='confirmada')  # confirmada, cancelada
+    status = db.Column(db.String(20), default='confirmada')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     __table_args__ = (db.UniqueConstraint('aluno_id', 'monitoria_id'),)
@@ -119,7 +121,7 @@ class Avaliacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     aluno_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     monitoria_id = db.Column(db.Integer, db.ForeignKey('monitorias.id'), nullable=False)
-    nota = db.Column(db.Integer, nullable=False)  # 1-5
+    nota = db.Column(db.Integer, nullable=False)
     comentario = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -131,7 +133,7 @@ class HistoricoBusca(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     termo_busca = db.Column(db.String(200), nullable=False)
-    filtros = db.Column(db.Text)  # JSON com filtros aplicados
+    filtros = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Suporte(db.Model):
@@ -141,8 +143,21 @@ class Suporte(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     assunto = db.Column(db.String(200), nullable=False)
     mensagem = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='aberto')  # aberto, em_andamento, resolvido
+    status = db.Column(db.String(20), default='aberto')
     resposta = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     usuario = db.relationship('Usuario', backref='tickets_suporte')
+
+class Notificacao(db.Model):
+    __tablename__ = 'notificacoes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    mensagem = db.Column(db.Text, nullable=False)
+    tipo = db.Column(db.String(50), nullable=False)
+    lida = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    usuario = db.relationship('Usuario', backref='notificacoes')
